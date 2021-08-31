@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#include <stdlib.h>
 
 bool is_prime(int n);
 
@@ -31,7 +32,8 @@ int main(int argc, char *argv[]) {
     // Broadcast value of N to all processes
     MPI_Bcast(&n_limit, 1, MPI_INT, 0, MPI_COMM_WORLD);
     int segment_size = n_limit / size;
-    int prime_nums[segment_size];
+    // int prime_nums[segment_size];
+    int* prime_nums = (int*) malloc(segment_size * sizeof(int));
 
     int num_found = 0;
     // Divide effort among processes and run prime search
@@ -62,6 +64,8 @@ int main(int argc, char *argv[]) {
         MPI_Send(&num_found, 1, MPI_INT, 0, tag, MPI_COMM_WORLD);
         MPI_Send(prime_nums, num_found, MPI_INT, 0, tag, MPI_COMM_WORLD);
     }
+
+    free(prime_nums);
 
     // Stop the timer and print the total time taken
     clock_gettime(CLOCK_MONOTONIC, &finish);
