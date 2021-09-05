@@ -2,3 +2,7 @@
 *.out
 
 .vscode/
+
+**/cmake-build-*/
+
+**/.idea/
