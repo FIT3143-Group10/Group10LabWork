@@ -47,20 +47,24 @@ int main(int argc, char* argv[]) {
     // Pick a random process to enter the critical section.
     int chosen = (rand() % (size - 1)) + 1;
     if (rank == chosen) {
-        printf("Process %d wants to enter critical section.\n", chosen);
+        printf("Node %d wants to enter critical section.\n", chosen);
         requesting = true;
         // If we don't have the privilege, request it.
         if (!has_privilege) {
             RN[rank] += 1;
-            for (int dest = 0; dest < size; dest++) {
-                if (dest != rank) {
-                    MPI_Request req;
-                    // Broadcast (j, RN[j]).
-                    temp[0] = rank;
-                    temp[1] = RN[rank];
-                    MPI_Ibcast(temp, 2, MPI_INT, rank, MPI_COMM_WORLD, &req);
-                }
+            printf("Node %d: RN array updated to ", rank);
+            for (int i = 0; i < size; i++) {
+                printf("%d ", RN[i]);
             }
+            printf("\n");
+
+            MPI_Request req;
+            // Broadcast (j, RN[j]).
+            temp[0] = rank;
+            temp[1] = RN[rank];
+            printf("Node %d: Request broadcasted to all other nodes.\n", rank);
+            MPI_Ibcast(temp, 2, MPI_INT, rank, MPI_COMM_WORLD, &req);
+
             // Receive Q.
             MPI_Recv(&Q->head, 1, MPI_INT, MPI_ANY_SOURCE, PRIVILEGE, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             MPI_Recv(&Q->num_el, 1, MPI_INT, MPI_ANY_SOURCE, PRIVILEGE, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
@@ -69,13 +73,20 @@ int main(int argc, char* argv[]) {
             // Receive LN array.
             MPI_Recv(LN, size, MPI_INT, MPI_ANY_SOURCE, PRIVILEGE, MPI_COMM_WORLD, &status);
             has_privilege = true;
-            printf("Privilege sent to process %d from process %d.\n", rank, status.MPI_SOURCE);
+            printf("Node %d: Privilege received from node %d.\n", rank, status.MPI_SOURCE);
         }
         // Can now enter the critical section.
         critical_section();
 
-        // Check if there are other nodes requesting privilege.
+        // Update LN array.
         LN[rank] = RN[rank];
+        printf("Node %d: LN array updated to ", rank);
+        for (int i = 0; i < size; i++) {
+            printf("%d ", LN[i]);
+        }
+        printf("\n");
+
+        // Check if there are other nodes requesting privilege.
         for (int i = 0; i < size; i++) {
             if (i != rank && RN[i] == LN[i] + 1) {
                 queue_append(Q, i);
@@ -87,6 +98,7 @@ int main(int argc, char* argv[]) {
         if (num) {
             int dest_node;
             queue_pop(Q, &dest_node);
+            printf("Node %d: Sending privilege to node %d.\n", rank, dest_node);
             // Send Q.
             MPI_Send(&Q->head, 1, MPI_INT, dest_node, PRIVILEGE, MPI_COMM_WORLD);
             MPI_Send(&Q->num_el, 1, MPI_INT, dest_node, PRIVILEGE, MPI_COMM_WORLD);
@@ -104,8 +116,15 @@ int main(int argc, char* argv[]) {
         in_rank = temp[0];
         in_num = temp[1];
         RN[in_rank] = MAX(RN[in_rank], in_num);
+        printf("Node %d: Request received from node %d.\n", rank, in_rank);
+        printf("Node %d: RN array updated to ", rank);
+        for (int i = 0; i < size; i++) {
+            printf("%d ", RN[i]);
+        }
+        printf("\n");
         if (has_privilege && !requesting) {
             has_privilege = false;
+            printf("Node %d: Sending privilege to node %d.\n", rank, chosen);
             // Send Q.
             MPI_Send(&Q->head, 1, MPI_INT, chosen, PRIVILEGE, MPI_COMM_WORLD);
             MPI_Send(&Q->num_el, 1, MPI_INT, chosen, PRIVILEGE, MPI_COMM_WORLD);
@@ -126,10 +145,10 @@ int main(int argc, char* argv[]) {
 
 int critical_section() {
     if (has_privilege) {
-        printf("Process %d has entered critical section.\n", rank);
+        printf("Node %d: Now entering critical section.\n", rank);
         return ALLOWED;
     } else {
-        printf("Process %d is not allowed to enter the critical section.\n", rank);
+        printf("Node %d: Not allowed to enter the critical section.\n", rank);
         return DENIED;
     }
 }
