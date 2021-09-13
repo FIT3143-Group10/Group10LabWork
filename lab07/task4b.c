@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
             pData[i] = rand() % 1500 + 1;
         }
 
-#pragma omp parallel for private(i)
+#pragma omp parallel for default(shared)
         for (i = 1; i < p; i++) {
             MPI_Send(pData, SIZE, MPI_INT, i, tag, MPI_COMM_WORLD);
         }

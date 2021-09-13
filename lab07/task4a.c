@@ -16,7 +16,6 @@ int main() {
     int i;
 
     MPI_Status status;
-//    MPI_Request request;
     struct timespec start, end;
     double time_taken;
     int provide;
@@ -27,12 +26,12 @@ int main() {
 
     pData = (int *) malloc(SIZE * sizeof(int));
     if (my_rank == 0) {
-//        clock_gettime(CLOCK_MONOTONIC, &start);
         printf("task4a\n");
         srand(time(NULL));
         for (i = 0; i < SIZE; i++) {
             pData[i] = rand() % 1500 + 1;
         }
+
         MPI_Request requests[p - 1];
         for (i = 1; i < p; i++) {
             MPI_Isend(pData, SIZE, MPI_INT, i, tag, MPI_COMM_WORLD, &requests[i - 1]);

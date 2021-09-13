@@ -33,12 +33,7 @@ int main() {
         }
 
         for (i = 1; i < p; i++) {
-//            clock_gettime(CLOCK_MONOTONIC, &start);
             MPI_Send(pData, SIZE, MPI_INT, i, tag, MPI_COMM_WORLD);
-//            clock_gettime(CLOCK_MONOTONIC, &end);
-//            time_taken = (end.tv_sec - start.tv_sec) * 1e9;
-//            time_taken = (time_taken + (end.tv_nsec - start.tv_nsec)) * 1e-9;
-//            printf("Rank: %d. Time taken to send data to rank %d: %lf\n", my_rank, i, time_taken);
         }
     } else {
         clock_gettime(CLOCK_MONOTONIC, &start);
