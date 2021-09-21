@@ -1,0 +1,7 @@
+Received matching 3 from process 6
+Received matching 3 from process 4
+Received matching 2 from process 6
+Received matching 2 from process 0
+Received matching 2 from process 6
+Received matching 2 from process 0
+Received matching 2 from process 6
